@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pawns</title>
+    <script src="creatartis-base.js"></script>
+    <script src="sermat.js"></script>
+    <script src="ludorum.js"></script>
+    <script src="Choose2Win.js"></script>
+    <style>
+        .grid-container {
+            display: grid;
+            height: 100%;
+            grid-template-columns: 1fr 1024px 1fr;
+            grid-template-rows: 250px 1fr;
+            grid-template-areas: "NW N NE" "W C E";
+        }
+        .NW { grid-area: NW; }
+        .N  { grid-area: N; }
+        .NE { grid-area: NE; }
+        .W  { grid-area: W; }
+        .C  { grid-area: C; }
+        .E  { grid-area: E; }
+
+        input[type="text"]
+        {
+            width: 100%;
+            border: 2px solid #CCC;
+            font-size: 125%
+        }
+
+        body {
+            font-size: 125%;
+            font-family: monospace;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="grid-container">
+    <div class="NW">
+    </div>
+    <div class="N">
+    </div>
+    <div class="NE">
+    </div>
+    <div class="W">
+    </div>
+    <div class="C">
+        <input type="text"   id="input1" width="800">
+        <input type="button" id="button1">
+        <div id="messages"></div>
+    </div>
+    <div class="E">
+    </div>
+</div>
+
+<script>
+
+    function output(s) {
+        let m = typeof s === 'object' ? JSON.stringify(s) : s;
+        console.log(m);
+        messages.appendChild(document.createElement("br"));
+        messages.appendChild(document.createTextNode(m));
+
+    }
+
+    output("You are White, The computer is Black.");
+
+
+    var button1  = document.getElementById("button1");
+    var input1   = document.getElementById("input1");
+
+    var Choose2WinPlayer = ludorum.Player.make({
+        constructor: function Choose2WinPlayer(params) {
+            ludorum.Player.call(this, params);
+        }
+    });
+
+    Choose2WinPlayer.prototype.decision = function decision(game, player) {
+        var moves = game.moves();
+        if (!moves || !moves[player] || (moves[player]+'').indexOf('win') < 0) {
+            throw new Error('Cannot choose to win in game '+ game +'!');
+        } else {
+            output("Your move. Please enter 'win' or 'pass' and click the button.");
+            let result = new base.Future();
+            button1.onclick = function() {
+                result.resolve(input1.value);
+            }
+            return result;
+        }
+    };
+
+    Choose2Win.runTestMatch = function runTestMatch(players) {
+        players = players || [new Choose2WinPlayer(), new ludorum.players.RandomPlayer()];
+        var match = new ludorum.Match(new Choose2Win(), players);
+
+        match.events.on('next', function (game, moves) {
+            let move = moves['Black'];
+            if (move !== undefined) {
+                output("Black plays: " + move);
+            }
+        });
+
+        match.events.on('end', function (game, result) {
+            output(game.winner + " wins!");
+        });
+
+        return match.run();
+    };
+
+
+
+    Choose2Win.runTestMatch();
+
+</script>
+</body>
+</html>
